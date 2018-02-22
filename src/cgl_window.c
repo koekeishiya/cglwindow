@@ -180,18 +180,18 @@ void cgl_window_set_input_callback(struct cgl_window *window, cgl_window_input_c
 void cgl_window_process_input_events(struct cgl_window *window)
 {
     EventTargetRef event_target = GetEventDispatcherTarget();
-    EventRef carbon_event_ref;
-    CGEventRef cg_event;
+    EventRef event_ref;
+    CGEventRef event;
 
-    while (ReceiveNextEvent(0, NULL, kEventDurationNoWait, true, &carbon_event_ref) == noErr) {
-        if ((cg_event = CopyEventCGEvent(carbon_event_ref))) {
+    while (ReceiveNextEvent(0, NULL, kEventDurationNoWait, true, &event_ref) == noErr) {
+        if ((event = CopyEventCGEvent(event_ref))) {
             if (window->input_callback) {
-                window->input_callback(window, cg_event);
+                window->input_callback(window, event);
             }
-            CFRelease(cg_event);
+            CFRelease(event);
         }
 
-        SendEventToEventTarget(carbon_event_ref, event_target);
-        ReleaseEvent(carbon_event_ref);
+        SendEventToEventTarget(event_ref, event_target);
+        ReleaseEvent(event_ref);
     }
 }
