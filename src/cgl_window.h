@@ -23,6 +23,7 @@ struct cgl_window
 {
     CGSConnectionID connection;
     CGSWindowID id;
+    ProcessSerialNumber psn;
     CGLContextObj context;
     CGSSurfaceID surface;
     CGWindowLevel level;
@@ -30,10 +31,10 @@ struct cgl_window
     cgl_window_input_callback *input_callback;
 };
 
-void cgl_window_set_input_callback(struct cgl_window *window, cgl_window_input_callback *callback);
 void cgl_window_process_input_events(struct cgl_window *window);
+void cgl_window_bring_to_front(struct cgl_window *window);
 
-int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, int use_legacy_gl);
+int cgl_window_init(struct cgl_window *window, cgl_window_input_callback *callback, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, int use_legacy_gl);
 void cgl_window_destroy(struct cgl_window *window);
 
 void cgl_window_make_current(struct cgl_window *window);

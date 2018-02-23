@@ -21,8 +21,8 @@ CGL_WINDOW_INPUT_CALLBACK(input_callback)
     switch (event_type) {
     case kCGEventLeftMouseDown: {
         event_type_str = "kCGEventLeftMouseDown";
-        CGSOrderWindow(window->connection, window->id, kCGSOrderAbove, 0);
         mouse_is_down = true;
+        cgl_window_bring_to_front(window);
     } break;
     case kCGEventLeftMouseUp: {
         event_type_str = "kCGEventLeftMouseUp";
@@ -99,40 +99,39 @@ CGL_WINDOW_INPUT_CALLBACK(input_callback)
     printf("%s:%d\n", event_type_str, event_type);
 }
 
+void render_triangle(struct cgl_window *window)
+{
+    glClearColor((int)mouse_is_down, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    static float a = 0;
+    glRotatef(a * 1000, 0, 0, 1);
+    a = a + 0.001;
+    glBegin(GL_QUADS);
+    if (a > 1.5) {
+        a = 0;
+    }
+    glColor4f(a, 1, 0, 1);
+    glVertex2f(0.25, 0.25);
+    glVertex2f(0.75, 0.25);
+    glVertex2f(0.75, 0.75);
+    glVertex2f(0.25, 0.75);
+    glEnd();
+}
+
 int main(int argc, char **argv)
 {
     struct cgl_window window = {};
-    cgl_window_set_input_callback(&window, &input_callback);
-
-    if (cgl_window_init(&window, 200, 200, 500, 500, kCGFloatingWindowLevelKey, true)) {
+    if (cgl_window_init(&window, &input_callback, 200, 200, 500, 500, kCGNormalWindowLevelKey, true)) {
         cgl_window_make_current(&window);
 
         while (!should_quit) {
             cgl_window_process_input_events(&window);
 
-            if (mouse_is_down) {
-                glClearColor(1, 0, 0, 1);
-            } else {
-                glClearColor(0, 0, 0, 1);
-            }
-            glClear(GL_COLOR_BUFFER_BIT);
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
-            glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
-            static float a = 0;
-            glRotatef(a * 1000, 0, 0, 1);
-            a = a + 0.001;
-            glBegin(GL_QUADS);
-            if (a > 1.5) {
-                a = 0;
-            }
-            glColor4f(a, 1, 0, 1);
-            glVertex2f(0.25, 0.25);
-            glVertex2f(0.75, 0.25);
-            glVertex2f(0.75, 0.75);
-            glVertex2f(0.25, 0.75);
-            glEnd();
+            render_triangle(&window);
 
             cgl_window_flush(&window);
         }

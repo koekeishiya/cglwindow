@@ -22,6 +22,7 @@ CGError CGSNewWindow(CGSConnectionID cid, int, float, float, const CGSRegionRef,
 CGError CGSReleaseWindow(CGSConnectionID cid, CGWindowID wid);
 CGError CGSNewRegionWithRect(const CGRect * rect, CGSRegionRef *newRegion);
 OSStatus CGSOrderWindow(CGSConnectionID cid, CGSWindowID wid, enum CGSWindowOrderingMode place, CGSWindowID relativeToWindow /* nullable */);
+void CPSStealKeyFocus(ProcessSerialNumber *psn);
 CGError CGSMoveWindow(CGSConnectionID cid, CGSWindowID wid, CGPoint *window_pos);
 CGError CGSSetWindowOpacity(CGSConnectionID cid, CGSWindowID wid, bool isOpaque);
 CGError CGSSetWindowLevel(CGSConnectionID cid, CGSWindowID wid, CGWindowLevel level);
@@ -110,7 +111,7 @@ err:
     return 0;
 }
 
-int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, int use_legacy_gl)
+int cgl_window_init(struct cgl_window *window, cgl_window_input_callback *input_callback, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, int use_legacy_gl)
 {
     CGContextRef context;
     CGSRegionRef region;
@@ -127,6 +128,8 @@ int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat wid
     window->width = width;
     window->height = height;
     window->level = level;
+    window->input_callback = input_callback;
+    GetCurrentProcess(&window->psn);
 
     rect = CGRectMake(0, 0, window->width, window->height);
     CGSNewRegionWithRect(&rect, &region);
@@ -141,7 +144,7 @@ int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat wid
 
     CGSSetWindowOpacity(window->connection, window->id, 0);
     CGSSetWindowLevel(window->connection, window->id, CGWindowLevelForKey((CGWindowLevelKey)window->level));
-    CGSOrderWindow(window->connection, window->id, kCGSOrderAbove, 0);
+    cgl_window_bring_to_front(window);
 
     context = CGWindowContextCreate(window->connection, window->id, 0);
     CGContextClearRect(context, rect);
@@ -162,6 +165,12 @@ void cgl_window_destroy(struct cgl_window *window)
     CGSReleaseWindow(window->connection, window->id);
 }
 
+void cgl_window_bring_to_front(struct cgl_window *window)
+{
+    CGSOrderWindow(window->connection, window->id, kCGSOrderAbove, 0);
+    CPSStealKeyFocus(&window->psn);
+}
+
 void cgl_window_make_current(struct cgl_window *window)
 {
     CGLSetCurrentContext(window->context);
@@ -170,11 +179,6 @@ void cgl_window_make_current(struct cgl_window *window)
 CGLError cgl_window_flush(struct cgl_window *window)
 {
     return CGLFlushDrawable(window->context);
-}
-
-void cgl_window_set_input_callback(struct cgl_window *window, cgl_window_input_callback *callback)
-{
-    window->input_callback = callback;
 }
 
 void cgl_window_process_input_events(struct cgl_window *window)
