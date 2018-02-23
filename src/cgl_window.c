@@ -112,7 +112,7 @@ err:
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-int cgl_window_init(struct cgl_window *window, enum cgl_window_gl_profile gl_profile, cgl_window_input_callback *callback, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level)
+int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, enum cgl_window_gl_profile gl_profile, cgl_window_input_callback *callback)
 {
     CGContextRef context;
     CGSRegionRef region;

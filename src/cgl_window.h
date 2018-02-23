@@ -40,7 +40,7 @@ struct cgl_window
 void cgl_window_process_input_events(struct cgl_window *window);
 void cgl_window_bring_to_front(struct cgl_window *window);
 
-int cgl_window_init(struct cgl_window *window, enum cgl_window_gl_profile gl_profile, cgl_window_input_callback *callback, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level);
+int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, enum cgl_window_gl_profile gl_profile, cgl_window_input_callback *callback);
 void cgl_window_destroy(struct cgl_window *window);
 
 void cgl_window_make_current(struct cgl_window *window);
