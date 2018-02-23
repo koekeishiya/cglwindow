@@ -60,6 +60,14 @@ CGL_WINDOW_INPUT_CALLBACK(input_callback)
     } break;
     case kCGEventKeyDown: {
         event_type_str = "kCGEventKeyDown";
+        uint32_t flags = CGEventGetFlags(event);
+        uint32_t key = CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
+
+        if (key == kVK_ANSI_Q || key == kVK_Escape) {
+            should_quit = true;
+        }
+
+        printf("keycode: 0x%02x, flags: %08x\t", key, flags);
     } break;
     case kCGEventKeyUp: {
         event_type_str = "kCGEventKeyUp";
