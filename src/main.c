@@ -138,11 +138,11 @@ int main(int argc, char **argv)
 
         while (!should_quit) {
             cgl_window_process_input_events(&window);
-
             render_triangle(&window);
-
             cgl_window_flush(&window);
         }
+
+        cgl_window_destroy(&window);
     }
 
     return 0;
