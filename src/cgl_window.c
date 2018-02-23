@@ -35,8 +35,10 @@ CGContextRef CGWindowContextCreate(CGSConnectionID cid, CGSWindowID wid, CFDicti
 }
 #endif
 
+static int cgl_gl_profiles[2] = { kCGLOGLPVersion_Legacy, kCGLOGLPVersion_3_2_Core };
+
 static int
-cgl_window_context_init(struct cgl_window *window, int use_legacy_gl)
+cgl_window_context_init(struct cgl_window *window, enum cgl_window_gl_profile gl_profile)
 {
     CGLPixelFormatObj pixel_format;
     GLint surface_opacity;
@@ -46,14 +48,11 @@ cgl_window_context_init(struct cgl_window *window, int use_legacy_gl)
     GLint drawable;
     GLint num;
 
-    CGLPixelFormatAttribute gl_profile_version = use_legacy_gl
-                                               ? (CGLPixelFormatAttribute) kCGLOGLPVersion_Legacy
-                                               : (CGLPixelFormatAttribute) kCGLOGLPVersion_3_2_Core;
     CGLPixelFormatAttribute attributes[] = {
         kCGLPFADoubleBuffer,
         kCGLPFAAccelerated,
         kCGLPFAOpenGLProfile,
-        gl_profile_version,
+        (CGLPixelFormatAttribute) cgl_gl_profiles[gl_profile],
         0
     };
 
@@ -111,7 +110,9 @@ err:
     return 0;
 }
 
-int cgl_window_init(struct cgl_window *window, cgl_window_input_callback *input_callback, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, int use_legacy_gl)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+int cgl_window_init(struct cgl_window *window, enum cgl_window_gl_profile gl_profile, cgl_window_input_callback *callback, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level)
 {
     CGContextRef context;
     CGSRegionRef region;
@@ -128,7 +129,7 @@ int cgl_window_init(struct cgl_window *window, cgl_window_input_callback *input_
     window->width = width;
     window->height = height;
     window->level = level;
-    window->input_callback = input_callback;
+    window->input_callback = callback;
     GetCurrentProcess(&window->psn);
 
     rect = CGRectMake(0, 0, window->width, window->height);
@@ -150,7 +151,7 @@ int cgl_window_init(struct cgl_window *window, cgl_window_input_callback *input_
     CGContextClearRect(context, rect);
     CGContextRelease(context);
 
-    result = cgl_window_context_init(window, use_legacy_gl);
+    result = cgl_window_context_init(window, gl_profile);
 
 err_region:
     CFRelease(region);
@@ -158,6 +159,7 @@ err_region:
 err:
     return result;
 }
+#pragma clang diagnostic pop
 
 void cgl_window_destroy(struct cgl_window *window)
 {

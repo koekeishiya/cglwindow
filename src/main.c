@@ -125,7 +125,7 @@ void render_triangle(struct cgl_window *window)
 int main(int argc, char **argv)
 {
     struct cgl_window window = {};
-    if (cgl_window_init(&window, &input_callback, 200, 200, 500, 500, kCGNormalWindowLevelKey, true)) {
+    if (cgl_window_init(&window, CGL_WINDOW_GL_LEGACY, &input_callback, 200, 200, 500, 500, kCGNormalWindowLevelKey)) {
         cgl_window_make_current(&window);
 
         while (!should_quit) {

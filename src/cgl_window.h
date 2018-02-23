@@ -19,6 +19,12 @@ struct cgl_window;
 #define CGL_WINDOW_INPUT_CALLBACK(name) void name(struct cgl_window *window, CGEventRef event)
 typedef CGL_WINDOW_INPUT_CALLBACK(cgl_window_input_callback);
 
+enum cgl_window_gl_profile
+{
+    CGL_WINDOW_GL_LEGACY = 0,
+    CGL_WINDOW_GL_CORE   = 1
+};
+
 struct cgl_window
 {
     CGSConnectionID connection;
@@ -34,7 +40,7 @@ struct cgl_window
 void cgl_window_process_input_events(struct cgl_window *window);
 void cgl_window_bring_to_front(struct cgl_window *window);
 
-int cgl_window_init(struct cgl_window *window, cgl_window_input_callback *callback, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, int use_legacy_gl);
+int cgl_window_init(struct cgl_window *window, enum cgl_window_gl_profile gl_profile, cgl_window_input_callback *callback, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level);
 void cgl_window_destroy(struct cgl_window *window);
 
 void cgl_window_make_current(struct cgl_window *window);
