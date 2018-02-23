@@ -1,9 +1,9 @@
-BUILD_FLAGS		= -O0 -g -Wall -std=c99
-BUILD_PATH		= ./bin
-SRC				= ./src/main.c
-BINS			= $(BUILD_PATH)/main
-INCLUDE         = -I/opt/local/include
-LINK			= -L/opt/local/lib -framework Carbon -framework ApplicationServices -framework OpenGL
+BUILD_FLAGS	= -O0 -g -Wall -std=c99
+BUILD_PATH	= ./bin
+SRC			= ./src/main.c
+BINS		= $(BUILD_PATH)/main
+INCLUDE		= -I/opt/local/include
+LINK		= -L/opt/local/lib -framework Carbon -framework ApplicationServices -framework OpenGL
 
 all: $(BINS)
 
