@@ -115,10 +115,10 @@ err:
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, enum cgl_window_gl_profile gl_profile, cgl_window_input_callback *callback)
 {
+    int result = 0;
     CGContextRef context;
     CGSRegionRef region;
     CGRect rect;
-    int result = 0;
 
     window->connection = CGSMainConnectionID();
     if(!window->connection) {
@@ -178,19 +178,20 @@ int cgl_window_move(struct cgl_window *window, float x, float y)
 
 int cgl_window_resize(struct cgl_window *window, float x, float y, float width, float height)
 {
+    int result = 0;
     CGSRegionRef shape;
     CGRect rect = CGRectMake(0, 0, width, height);
 
     if (CGSNewRegionWithRect(&rect, &shape) != kCGErrorSuccess) {
-        return 0;
+        goto err;
     }
 
     if (CGSSetWindowShape(window->connection, window->id, x, y, shape) != kCGErrorSuccess) {
-        return 0;
+        goto err_region;
     }
 
     if (CGSSetSurfaceBounds(window->connection, window->id, window->surface, rect) != kCGErrorSuccess) {
-        return 0;
+        goto err_region;
     }
 
     glViewport(0, 0, width, height);
@@ -198,7 +199,14 @@ int cgl_window_resize(struct cgl_window *window, float x, float y, float width, 
     window->y = y;
     window->width = width;
     window->height = height;
-    return 1;
+
+    result = 1;
+
+err_region:
+    CFRelease(shape);
+
+err:
+    return result;
 }
 
 void cgl_window_destroy(struct cgl_window *window)
