@@ -10,100 +10,69 @@
 #define internal static
 
 global_variable bool should_quit;
-global_variable bool mouse_is_down;
-global_variable bool mouse_drag_started;
-global_variable CGPoint mouse_drag_start_pos;
+global_variable bool left_mouse_down;
 
-CGL_WINDOW_INPUT_CALLBACK(input_callback)
+void key_callback(struct cgl_window *window, EventRef event)
 {
-    char *event_type_str = NULL;
-    CGEventType event_type = CGEventGetType(event);
-    switch (event_type) {
-    case kCGEventLeftMouseDown: {
-        event_type_str = "kCGEventLeftMouseDown";
-        mouse_is_down = true;
-        cgl_window_bring_to_front(window);
-    } break;
-    case kCGEventLeftMouseUp: {
-        event_type_str = "kCGEventLeftMouseUp";
-        mouse_is_down = false;
-        mouse_drag_started = false;
-    } break;
-    case kCGEventRightMouseDown: {
-        event_type_str = "kCGEventRightMouseDown";
-        should_quit = true;
-    } break;
-    case kCGEventRightMouseUp: {
-        event_type_str = "kCGEventRightMouseUp";
-    } break;
-    case kCGEventMouseMoved: {
-        event_type_str = "kCGEventMouseMoved";
-    } break;
-    case kCGEventLeftMouseDragged: {
-       event_type_str = "kCGEventLeftMouseDragged";
-       CGPoint event_pos = CGEventGetLocation(event);
+    uint32_t event_kind = GetEventKind(event);
+    if ((event_kind == kEventRawKeyDown) ||
+        (event_kind == kEventRawKeyRepeat) ||
+        (event_kind == kEventRawKeyUp)) {
+        uint32_t keycode;
+        char charcode;
+        uint32_t modifiers;
 
-       if (!mouse_drag_started) {
-           mouse_drag_started = true;
-           mouse_drag_start_pos = event_pos;
-       }
+        GetEventParameter(event, kEventParamKeyCode, typeUInt32, NULL, sizeof(UInt32), NULL, &keycode);
+        GetEventParameter(event, kEventParamKeyMacCharCodes, typeChar, NULL, sizeof(char), NULL, &charcode);
+        GetEventParameter(event, kEventParamKeyModifiers, typeUInt32, 0, sizeof(UInt32), 0, &modifiers);
 
-       cgl_window_move(window, window->x + event_pos.x - mouse_drag_start_pos.x, window->y + event_pos.y - mouse_drag_start_pos.y);
-       mouse_drag_start_pos = event_pos;
-    } break;
-    case kCGEventRightMouseDragged: {
-        event_type_str = "kCGEventRightMouseDragged";
-    } break;
-    case kCGEventKeyDown: {
-        event_type_str = "kCGEventKeyDown";
-        uint32_t flags = CGEventGetFlags(event);
-        uint32_t key = CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
+        printf("modifiers: %08x, keycode: %d, charcode: %c\n", modifiers, keycode, charcode);
 
-        if (key == kVK_ANSI_Q || key == kVK_Escape) {
+        if (event_kind == kEventRawKeyDown && (keycode == kVK_ANSI_Q || keycode == kVK_Escape)) {
             should_quit = true;
         }
 
-        if (key == kVK_ANSI_R) {
+        if (event_kind == kEventRawKeyDown && keycode == kVK_ANSI_R && (modifiers & CGL_EVENT_MOD_SHIFT)) {
+            cgl_window_resize(window, window->x, window->y, window->width - 5, window->height - 5);
+        } else if (event_kind == kEventRawKeyDown && keycode == kVK_ANSI_R) {
             cgl_window_resize(window, window->x, window->y, window->width + 5, window->height + 5);
         }
-
-        printf("keycode: 0x%02x, flags: %08x\t", key, flags);
-    } break;
-    case kCGEventKeyUp: {
-        event_type_str = "kCGEventKeyUp";
-    } break;
-    case kCGEventFlagsChanged: {
-        event_type_str = "kCGEventFlagsChanged";
-    } break;
-    case kCGEventScrollWheel: {
-        event_type_str = "kCGEventScrollWheel";
-    } break;
-    case kCGEventTabletPointer: {
-        event_type_str = "kCGEventTabletPointer";
-    } break;
-    case kCGEventTabletProximity: {
-        event_type_str = "kCGEventTabletProximity";
-    } break;
-    case kCGEventOtherMouseDown: {
-        event_type_str = "kCGEventOtherMouseDown";
-    } break;
-    case kCGEventOtherMouseUp: {
-        event_type_str = "kCGEventOtherMouseUp";
-    } break;
-    case kCGEventOtherMouseDragged: {
-        event_type_str = "kCGEventOtherMouseDragged";
-    } break;
-    default: {
-        event_type_str = "unknown event";
-    } break;
     }
+}
 
-    printf("%s:%d\n", event_type_str, event_type);
+void mouse_callback(struct cgl_window *window, EventRef event)
+{
+    uint32_t event_kind = GetEventKind(event);
+    if ((event_kind == kEventMouseDown) || (event_kind == kEventMouseUp) ||
+        (event_kind == kEventMouseDragged) || (event_kind == kEventMouseMoved)) {
+        EventMouseButton button;
+        uint32_t modifiers;
+        HIPoint location;
+        HIPoint delta;
+
+        GetEventParameter(event, kEventParamMouseButton, typeMouseButton, 0, sizeof(EventMouseButton), 0, &button);
+        GetEventParameter(event, kEventParamKeyModifiers, typeUInt32, 0, sizeof(UInt32), 0, &modifiers);
+        GetEventParameter(event, kEventParamMouseLocation, typeHIPoint, NULL, sizeof(HIPoint), NULL, &location);
+        GetEventParameter(event, kEventParamMouseDelta, typeHIPoint, NULL, sizeof(HIPoint), NULL, &delta);
+
+        printf("modifiers: %08x, button: %d, location.x: %.2f, location.y: %.2f, delta.x: %.2f, delta.y: %.2f\n", modifiers, button, location.x, location.y, delta.x, delta.y);
+
+        if (event_kind == kEventMouseDown && button == 1) {
+            left_mouse_down = true;
+            cgl_window_bring_to_front(window);
+        } else if (event_kind == kEventMouseUp && button == 1) {
+            left_mouse_down = false;
+        } else if (event_kind == kEventMouseDragged && button == 1) {
+           cgl_window_move(window, window->x + delta.x, window->y + delta.y);
+        } else if (event_kind == kEventMouseDown && button == 2) {
+            should_quit = true;
+        }
+    }
 }
 
 void render_triangle(struct cgl_window *window)
 {
-    glClearColor((int)mouse_is_down, 0, 0, 1);
+    glClearColor((int)left_mouse_down, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -127,7 +96,9 @@ void render_triangle(struct cgl_window *window)
 int main(int argc, char **argv)
 {
     struct cgl_window window = {};
-    if (cgl_window_init(&window, 200, 200, 500, 500, kCGNormalWindowLevelKey, CGL_WINDOW_GL_LEGACY, &input_callback)) {
+    if (cgl_window_init(&window, 200, 200, 500, 500, kCGNormalWindowLevelKey, CGL_WINDOW_GL_LEGACY)) {
+        cgl_window_set_mouse_callback(&window, &mouse_callback);
+        cgl_window_set_key_callback(&window, &key_callback);
         cgl_window_make_current(&window);
 
         while (!should_quit) {

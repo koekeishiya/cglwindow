@@ -122,7 +122,7 @@ err:
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, enum cgl_window_gl_profile gl_profile, cgl_window_input_callback *callback)
+int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, enum cgl_window_gl_profile gl_profile)
 {
     int result = 0;
     CGContextRef context;
@@ -140,7 +140,6 @@ int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat wid
     window->height = height;
     window->level = level;
     window->gl_profile = gl_profile;
-    window->input_callback = callback;
     GetCurrentProcess(&window->psn);
 
     rect = CGRectMake(0, 0, window->width, window->height);
@@ -235,6 +234,16 @@ void cgl_window_bring_to_front(struct cgl_window *window)
 }
 #pragma clang diagnostic pop
 
+void cgl_window_set_mouse_callback(struct cgl_window *window, cgl_window_event_callback *mouse_callback)
+{
+    window->mouse_callback = mouse_callback;
+}
+
+void cgl_window_set_key_callback(struct cgl_window *window, cgl_window_event_callback *key_callback)
+{
+    window->key_callback = key_callback;
+}
+
 void cgl_window_make_current(struct cgl_window *window)
 {
     CGLSetCurrentContext(window->context);
@@ -245,6 +254,7 @@ CGLError cgl_window_flush(struct cgl_window *window)
     return CGLFlushDrawable(window->context);
 }
 
+#if 0
 static void
 debug_print_event_class(OSType event_class)
 {
@@ -268,25 +278,27 @@ debug_print_event_class(OSType event_class)
     default:                        { printf("event class unknown:%d\t", event_class);      } break;
     }
 }
+#endif
 
 void cgl_window_process_input_events(struct cgl_window *window)
 {
     EventTargetRef event_target = GetEventDispatcherTarget();
-    EventRef event_ref;
-    CGEventRef event;
+    EventRef event;
 
-    while (ReceiveNextEvent(0, NULL, kEventDurationNoWait, true, &event_ref) == noErr) {
-        OSType event_class = GetEventClass(event_ref);
-        if ((event_class == kEventClassMouse) || (event_class == kEventClassKeyboard)) {
-            if ((event = CopyEventCGEvent(event_ref))) {
-                if (window->input_callback) {
-                    window->input_callback(window, event);
-                }
-                CFRelease(event);
+    while (ReceiveNextEvent(0, NULL, kEventDurationNoWait, true, &event) == noErr) {
+        OSType event_class = GetEventClass(event);
+
+        if (event_class == kEventClassMouse) {
+            if (window->mouse_callback) {
+                window->mouse_callback(window, event);
+            }
+        } else if(event_class == kEventClassKeyboard) {
+            if (window->key_callback) {
+                window->key_callback(window, event);
             }
         }
 
-        SendEventToEventTarget(event_ref, event_target);
-        ReleaseEvent(event_ref);
+        SendEventToEventTarget(event, event_target);
+        ReleaseEvent(event);
     }
 }

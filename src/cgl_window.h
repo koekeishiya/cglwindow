@@ -16,8 +16,19 @@ typedef int CGSSurfaceID;
 typedef CFTypeRef CGSRegionRef;
 
 struct cgl_window;
-#define CGL_WINDOW_INPUT_CALLBACK(name) void name(struct cgl_window *window, CGEventRef event)
-typedef CGL_WINDOW_INPUT_CALLBACK(cgl_window_input_callback);
+#define CGL_WINDOW_EVENT_CALLBACK(name) void name(struct cgl_window *window, EventRef event)
+typedef CGL_WINDOW_EVENT_CALLBACK(cgl_window_event_callback);
+
+enum cgl_event_modifier
+{
+    CGL_EVENT_MOD_CMD   = cmdKey,
+    CGL_EVENT_MOD_SHIFT = shiftKey,
+    CGL_EVENT_MOD_CAPS  = alphaLock,
+    CGL_EVENT_MOD_ALT   = optionKey,
+    CGL_EVENT_MOD_CTRL  = controlKey,
+    CGL_EVENT_MOD_NUM   = kEventKeyModifierNumLockMask,
+    CGL_EVENT_MOD_FN    = kEventKeyModifierFnMask
+};
 
 enum cgl_window_gl_profile
 {
@@ -35,13 +46,17 @@ struct cgl_window
     CGWindowLevel level;
     CGFloat x, y, width, height;
     enum cgl_window_gl_profile gl_profile;
-    cgl_window_input_callback *input_callback;
+    cgl_window_event_callback *mouse_callback;
+    cgl_window_event_callback *key_callback;
 };
 
-void cgl_window_process_input_events(struct cgl_window *window);
+void cgl_window_set_mouse_callback(struct cgl_window *window, cgl_window_event_callback *mouse_callback);
+void cgl_window_set_key_callback(struct cgl_window *window, cgl_window_event_callback *key_callback);
+
+void cgl_window_process_events(struct cgl_window *window);
 void cgl_window_bring_to_front(struct cgl_window *window);
 
-int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, enum cgl_window_gl_profile gl_profile, cgl_window_input_callback *callback);
+int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, enum cgl_window_gl_profile gl_profile);
 void cgl_window_destroy(struct cgl_window *window);
 
 int cgl_window_move(struct cgl_window *window, float x, float y);
