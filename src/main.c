@@ -63,6 +63,11 @@ CGL_WINDOW_INPUT_CALLBACK(input_callback)
             should_quit = true;
         }
 
+        if (key == kVK_ANSI_R) {
+            int r = cgl_window_resize(window, window->x, window->y, window->width + 5, window->height + 5);
+            printf("resize result: %d\n", r);
+        }
+
         printf("keycode: 0x%02x, flags: %08x\t", key, flags);
     } break;
     case kCGEventKeyUp: {

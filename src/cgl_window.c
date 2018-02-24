@@ -28,6 +28,7 @@ CGError CGSMoveWindow(CGSConnectionID cid, CGSWindowID wid, CGPoint *window_pos)
 CGError CGSSetWindowOpacity(CGSConnectionID cid, CGSWindowID wid, bool isOpaque);
 CGError CGSSetWindowLevel(CGSConnectionID cid, CGSWindowID wid, CGWindowLevel level);
 CGError CGSAddSurface(CGSConnectionID cid, CGSWindowID wid, CGSSurfaceID *sid);
+CGError CGSRemoveSurface(CGSConnectionID cid, CGSWindowID wid, CGSSurfaceID sid);
 CGError CGSSetSurfaceBounds(CGSConnectionID cid, CGSWindowID wid, CGSSurfaceID sid, CGRect rect);
 CGError CGSOrderSurface(CGSConnectionID cid, CGSWindowID wid, CGSSurfaceID sid, int a, int b);
 CGLError CGLSetSurface(CGLContextObj gl, CGSConnectionID cid, CGSWindowID wid, CGSSurfaceID sid);
@@ -39,13 +40,41 @@ CGContextRef CGWindowContextCreate(CGSConnectionID cid, CGSWindowID wid, CFDicti
 static int cgl_gl_profiles[2] = { kCGLOGLPVersion_Legacy, kCGLOGLPVersion_3_2_Core };
 
 static int
+cgl_window_surface_init(struct cgl_window *window)
+{
+    GLint surface_opacity = 0;
+    CGLSetParameter(window->context, kCGLCPSurfaceOpacity, &surface_opacity);
+
+    if (CGSAddSurface(window->connection, window->id, &window->surface) != kCGErrorSuccess) {
+        goto err;
+    }
+
+    if (CGSSetSurfaceBounds(window->connection, window->id, window->surface, CGRectMake(0, 0, window->width, window->height)) != kCGErrorSuccess) {
+        goto err_surface;
+    }
+
+    if (CGSOrderSurface(window->connection, window->id, window->surface, 1, 0) != kCGErrorSuccess) {
+        goto err_surface;
+    }
+
+    if (CGLSetSurface(window->context, window->connection, window->id, window->surface) != kCGLNoError) {
+        goto err_surface;
+    }
+
+    return 1;
+
+err_surface:
+    CGSRemoveSurface(window->connection, window->id, window->surface);
+
+err:
+    return 0;
+}
+
+static int
 cgl_window_context_init(struct cgl_window *window)
 {
     CGLPixelFormatObj pixel_format;
-    GLint surface_opacity;
     GLint v_sync_enabled;
-    CGLError cgl_error;
-    CGError cg_error;
     GLint drawable;
     GLint num;
 
@@ -70,26 +99,7 @@ cgl_window_context_init(struct cgl_window *window)
     v_sync_enabled = 1;
     CGLSetParameter(window->context, kCGLCPSwapInterval, &v_sync_enabled);
 
-    surface_opacity = 0;
-    CGLSetParameter(window->context, kCGLCPSurfaceOpacity, &surface_opacity);
-
-    cg_error = CGSAddSurface(window->connection, window->id, &window->surface);
-    if(cg_error != kCGErrorSuccess) {
-        goto err_context;
-    }
-
-    cg_error = CGSSetSurfaceBounds(window->connection, window->id, window->surface, CGRectMake(0, 0, window->width, window->height));
-    if(cg_error != kCGErrorSuccess) {
-        goto err_context;
-    }
-
-    cg_error = CGSOrderSurface(window->connection, window->id, window->surface, 1, 0);
-    if(cg_error != kCGErrorSuccess) {
-        goto err_context;
-    }
-
-    cgl_error = CGLSetSurface(window->context, window->connection, window->id, window->surface);
-    if(cgl_error != kCGLNoError) {
+    if (!cgl_window_surface_init(window)) {
         goto err_context;
     }
 
@@ -190,16 +200,16 @@ int cgl_window_resize(struct cgl_window *window, float x, float y, float width, 
         goto err_region;
     }
 
-    if (CGSSetSurfaceBounds(window->connection, window->id, window->surface, rect) != kCGErrorSuccess) {
-        goto err_region;
-    }
-
-    glViewport(0, 0, width, height);
     window->x = x;
     window->y = y;
     window->width = width;
     window->height = height;
 
+    if (window->surface) {
+        CGSRemoveSurface(window->connection, window->id, window->surface);
+    }
+    cgl_window_surface_init(window);
+    glViewport(0, 0, width, height);
     result = 1;
 
 err_region:
