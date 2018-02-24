@@ -21,6 +21,7 @@ CGSConnectionID CGSMainConnectionID(void);
 CGError CGSNewWindow(CGSConnectionID cid, int, float, float, const CGSRegionRef, CGSWindowID *);
 CGError CGSReleaseWindow(CGSConnectionID cid, CGWindowID wid);
 CGError CGSNewRegionWithRect(const CGRect * rect, CGSRegionRef *newRegion);
+CGError CGSSetWindowShape(CGSConnectionID cid, CGWindowID wid, float x_offset, float y_offset, const CGSRegionRef shape);
 OSStatus CGSOrderWindow(CGSConnectionID cid, CGSWindowID wid, enum CGSWindowOrderingMode place, CGSWindowID relativeToWindow /* nullable */);
 void CPSStealKeyFocus(ProcessSerialNumber *psn);
 CGError CGSMoveWindow(CGSConnectionID cid, CGSWindowID wid, CGPoint *window_pos);
@@ -38,7 +39,7 @@ CGContextRef CGWindowContextCreate(CGSConnectionID cid, CGSWindowID wid, CFDicti
 static int cgl_gl_profiles[2] = { kCGLOGLPVersion_Legacy, kCGLOGLPVersion_3_2_Core };
 
 static int
-cgl_window_context_init(struct cgl_window *window, enum cgl_window_gl_profile gl_profile)
+cgl_window_context_init(struct cgl_window *window)
 {
     CGLPixelFormatObj pixel_format;
     GLint surface_opacity;
@@ -52,7 +53,7 @@ cgl_window_context_init(struct cgl_window *window, enum cgl_window_gl_profile gl
         kCGLPFADoubleBuffer,
         kCGLPFAAccelerated,
         kCGLPFAOpenGLProfile,
-        (CGLPixelFormatAttribute) cgl_gl_profiles[gl_profile],
+        (CGLPixelFormatAttribute) cgl_gl_profiles[window->gl_profile],
         0
     };
 
@@ -129,6 +130,7 @@ int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat wid
     window->width = width;
     window->height = height;
     window->level = level;
+    window->gl_profile = gl_profile;
     window->input_callback = callback;
     GetCurrentProcess(&window->psn);
 
@@ -151,7 +153,7 @@ int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat wid
     CGContextClearRect(context, rect);
     CGContextRelease(context);
 
-    result = cgl_window_context_init(window, gl_profile);
+    result = cgl_window_context_init(window);
 
 err_region:
     CFRelease(region);
@@ -160,6 +162,44 @@ err:
     return result;
 }
 #pragma clang diagnostic pop
+
+int cgl_window_move(struct cgl_window *window, float x, float y)
+{
+   CGPoint window_pos = { .x = x, .y = y };
+
+   if (CGSMoveWindow(window->connection, window->id, &window_pos) != kCGErrorSuccess) {
+       return 0;
+   }
+
+   window->x = x;
+   window->y = y;
+   return 1;
+}
+
+int cgl_window_resize(struct cgl_window *window, float x, float y, float width, float height)
+{
+    CGSRegionRef shape;
+    CGRect rect = CGRectMake(0, 0, width, height);
+
+    if (CGSNewRegionWithRect(&rect, &shape) != kCGErrorSuccess) {
+        return 0;
+    }
+
+    if (CGSSetWindowShape(window->connection, window->id, x, y, shape) != kCGErrorSuccess) {
+        return 0;
+    }
+
+    if (CGSSetSurfaceBounds(window->connection, window->id, window->surface, rect) != kCGErrorSuccess) {
+        return 0;
+    }
+
+    glViewport(0, 0, width, height);
+    window->x = x;
+    window->y = y;
+    window->width = width;
+    window->height = height;
+    return 1;
+}
 
 void cgl_window_destroy(struct cgl_window *window)
 {

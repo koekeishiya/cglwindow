@@ -48,12 +48,8 @@ CGL_WINDOW_INPUT_CALLBACK(input_callback)
            mouse_drag_start_pos = event_pos;
        }
 
-       window->x = window->x + event_pos.x - mouse_drag_start_pos.x;
-       window->y = window->y + event_pos.y - mouse_drag_start_pos.y;
+       cgl_window_move(window, window->x + event_pos.x - mouse_drag_start_pos.x, window->y + event_pos.y - mouse_drag_start_pos.y);
        mouse_drag_start_pos = event_pos;
-
-       CGPoint window_pos =  { .x = window->x, .y = window->y };
-       CGSMoveWindow(window->connection, window->id, &window_pos);
     } break;
     case kCGEventRightMouseDragged: {
         event_type_str = "kCGEventRightMouseDragged";

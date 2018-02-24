@@ -34,6 +34,7 @@ struct cgl_window
     CGSSurfaceID surface;
     CGWindowLevel level;
     CGFloat x, y, width, height;
+    enum cgl_window_gl_profile gl_profile;
     cgl_window_input_callback *input_callback;
 };
 
@@ -42,6 +43,9 @@ void cgl_window_bring_to_front(struct cgl_window *window);
 
 int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, enum cgl_window_gl_profile gl_profile, cgl_window_input_callback *callback);
 void cgl_window_destroy(struct cgl_window *window);
+
+int cgl_window_move(struct cgl_window *window, float x, float y);
+int cgl_window_resize(struct cgl_window *window, float x, float y, float width, float height);
 
 void cgl_window_make_current(struct cgl_window *window);
 CGLError cgl_window_flush(struct cgl_window *window);
