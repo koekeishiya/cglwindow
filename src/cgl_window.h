@@ -19,7 +19,7 @@ struct cgl_window;
 #define CGL_WINDOW_EVENT_CALLBACK(name) void name(struct cgl_window *window, EventRef event)
 typedef CGL_WINDOW_EVENT_CALLBACK(cgl_window_event_callback);
 
-enum cgl_event_modifier
+enum cgl_window_event_modifier
 {
     CGL_EVENT_MOD_CMD   = cmdKey,
     CGL_EVENT_MOD_SHIFT = shiftKey,
