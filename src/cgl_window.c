@@ -23,7 +23,6 @@ CGError CGSReleaseWindow(CGSConnectionID cid, CGWindowID wid);
 CGError CGSNewRegionWithRect(const CGRect * rect, CGSRegionRef *newRegion);
 CGError CGSSetWindowShape(CGSConnectionID cid, CGWindowID wid, float x_offset, float y_offset, const CGSRegionRef shape);
 OSStatus CGSOrderWindow(CGSConnectionID cid, CGSWindowID wid, enum CGSWindowOrderingMode place, CGSWindowID relativeToWindow /* nullable */);
-void CPSStealKeyFocus(ProcessSerialNumber *psn);
 CGError CGSMoveWindow(CGSConnectionID cid, CGSWindowID wid, CGPoint *window_pos);
 CGError CGSSetWindowOpacity(CGSConnectionID cid, CGSWindowID wid, bool isOpaque);
 CGError CGSSetWindowLevel(CGSConnectionID cid, CGSWindowID wid, CGWindowLevel level);
@@ -157,6 +156,8 @@ int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat wid
 
     CGSSetWindowOpacity(window->connection, window->id, 0);
     CGSSetWindowLevel(window->connection, window->id, CGWindowLevelForKey((CGWindowLevelKey)window->level));
+
+    TransformProcessType(&window->psn, kProcessTransformToForegroundApplication);
     cgl_window_bring_to_front(window);
 
     context = CGWindowContextCreate(window->connection, window->id, 0);
@@ -225,11 +226,14 @@ void cgl_window_destroy(struct cgl_window *window)
     CGSReleaseWindow(window->connection, window->id);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 void cgl_window_bring_to_front(struct cgl_window *window)
 {
     CGSOrderWindow(window->connection, window->id, kCGSOrderAbove, 0);
-    CPSStealKeyFocus(&window->psn);
+    SetFrontProcess(&window->psn);
 }
+#pragma clang diagnostic pop
 
 void cgl_window_make_current(struct cgl_window *window)
 {
@@ -241,6 +245,30 @@ CGLError cgl_window_flush(struct cgl_window *window)
     return CGLFlushDrawable(window->context);
 }
 
+static void
+debug_print_event_class(OSType event_class)
+{
+    switch (event_class) {
+    case kEventClassMouse:          { printf("kEventClassMouse:%d\t", event_class);         } break;
+    case kEventClassKeyboard:       { printf("kEventClassKeyboard:%d\t", event_class);      } break;
+    case kEventClassTextInput:      { printf("kEventClassTextInput:%d\t", event_class);     } break;
+    case kEventClassApplication:    { printf("kEventClassApplication:%d\t", event_class);   } break;
+    case kEventClassAppleEvent:     { printf("kEventClassAppleEvent:%d\t", event_class);    } break;
+    case kEventClassMenu:           { printf("kEventClassMenu:%d\t", event_class);          } break;
+    case kEventClassWindow:         { printf("kEventClassWindow:%d\t", event_class);        } break;
+    case kEventClassControl:        { printf("kEventClassControl:%d\t", event_class);       } break;
+    case kEventClassCommand:        { printf("kEventClassCommand:%d\t", event_class);       } break;
+    case kEventClassTablet:         { printf("kEventClassTablet:%d\t", event_class);        } break;
+    case kEventClassVolume:         { printf("kEventClassVolume:%d\t", event_class);        } break;
+    case kEventClassAppearance:     { printf("kEventClassAppearance:%d\t", event_class);    } break;
+    case kEventClassService:        { printf("kEventClassService:%d\t", event_class);       } break;
+    case kEventClassToolbar:        { printf("kEventClassToolbar:%d\t", event_class);       } break;
+    case kEventClassToolbarItem:    { printf("kEventClassToolbarItem:%d\t", event_class);   } break;
+    case kEventClassAccessibility:  { printf("kEventClassAccessibility:%d\t", event_class); } break;
+    default:                        { printf("event class unknown:%d\t", event_class);      } break;
+    }
+}
+
 void cgl_window_process_input_events(struct cgl_window *window)
 {
     EventTargetRef event_target = GetEventDispatcherTarget();
@@ -248,11 +276,14 @@ void cgl_window_process_input_events(struct cgl_window *window)
     CGEventRef event;
 
     while (ReceiveNextEvent(0, NULL, kEventDurationNoWait, true, &event_ref) == noErr) {
-        if ((event = CopyEventCGEvent(event_ref))) {
-            if (window->input_callback) {
-                window->input_callback(window, event);
+        OSType event_class = GetEventClass(event_ref);
+        if ((event_class == kEventClassMouse) || (event_class == kEventClassKeyboard)) {
+            if ((event = CopyEventCGEvent(event_ref))) {
+                if (window->input_callback) {
+                    window->input_callback(window, event);
+                }
+                CFRelease(event);
             }
-            CFRelease(event);
         }
 
         SendEventToEventTarget(event_ref, event_target);

@@ -19,6 +19,9 @@ CGL_WINDOW_INPUT_CALLBACK(input_callback)
     char *event_type_str = NULL;
     CGEventType event_type = CGEventGetType(event);
     switch (event_type) {
+    case kCGEventNull: {
+        event_type_str = "kCGEventNull";
+    } break;
     case kCGEventLeftMouseDown: {
         event_type_str = "kCGEventLeftMouseDown";
         mouse_is_down = true;
@@ -64,8 +67,7 @@ CGL_WINDOW_INPUT_CALLBACK(input_callback)
         }
 
         if (key == kVK_ANSI_R) {
-            int r = cgl_window_resize(window, window->x, window->y, window->width + 5, window->height + 5);
-            printf("resize result: %d\n", r);
+            cgl_window_resize(window, window->x, window->y, window->width + 5, window->height + 5);
         }
 
         printf("keycode: 0x%02x, flags: %08x\t", key, flags);
