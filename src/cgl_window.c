@@ -280,7 +280,7 @@ debug_print_event_class(OSType event_class)
 }
 #endif
 
-void cgl_window_process_input_events(struct cgl_window *window)
+void cgl_window_process_events(struct cgl_window *window)
 {
     EventTargetRef event_target = GetEventDispatcherTarget();
     EventRef event;
