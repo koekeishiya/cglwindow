@@ -2,10 +2,9 @@ BUILD_FLAGS	= -O0 -g -Wall -std=c99
 BUILD_PATH	= ./bin
 SRC			= ./src/main.c
 BINS		= $(BUILD_PATH)/main
-INCLUDE		= -I/opt/local/include
-LINK		= -L/opt/local/lib -framework Carbon -framework ApplicationServices -framework OpenGL
+LINK		= -framework Carbon -framework OpenGL
 
-all: $(BINS)
+all: clean $(BINS)
 
 install: BUILD_FLAGS=-O2 -std=c99 -Wall
 install: clean $(BINS)
@@ -19,4 +18,4 @@ clean:
 	rm -f $(BUILD_PATH)/main
 
 $(BUILD_PATH)/main: $(SRC) | $(BUILD_PATH)
-	clang $^ $(BUILD_FLAGS) -o $@ $(INCLUDE) $(LINK)
+	clang $^ $(BUILD_FLAGS) -o $@ $(LINK)
