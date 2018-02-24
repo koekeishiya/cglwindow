@@ -19,9 +19,6 @@ CGL_WINDOW_INPUT_CALLBACK(input_callback)
     char *event_type_str = NULL;
     CGEventType event_type = CGEventGetType(event);
     switch (event_type) {
-    case kCGEventNull: {
-        event_type_str = "kCGEventNull";
-    } break;
     case kCGEventLeftMouseDown: {
         event_type_str = "kCGEventLeftMouseDown";
         mouse_is_down = true;
@@ -95,12 +92,6 @@ CGL_WINDOW_INPUT_CALLBACK(input_callback)
     } break;
     case kCGEventOtherMouseDragged: {
         event_type_str = "kCGEventOtherMouseDragged";
-    } break;
-    case kCGEventTapDisabledByTimeout: {
-        event_type_str = "kCGEventTapDisabledByTimeout";
-    } break;
-    case kCGEventTapDisabledByUserInput: {
-        event_type_str = "kCGEventTapDisabledByUserInput";
     } break;
     default: {
         event_type_str = "unknown event";
