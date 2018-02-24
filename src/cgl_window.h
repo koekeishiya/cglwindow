@@ -53,7 +53,7 @@ struct cgl_window
 void cgl_window_set_mouse_callback(struct cgl_window *window, cgl_window_event_callback *mouse_callback);
 void cgl_window_set_key_callback(struct cgl_window *window, cgl_window_event_callback *key_callback);
 
-void cgl_window_process_events(struct cgl_window *window);
+void cgl_window_poll_events(struct cgl_window *window);
 void cgl_window_bring_to_front(struct cgl_window *window);
 
 int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, enum cgl_window_gl_profile gl_profile);

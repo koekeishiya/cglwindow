@@ -102,7 +102,7 @@ int main(int argc, char **argv)
         cgl_window_make_current(&window);
 
         while (!should_quit) {
-            cgl_window_process_events(&window);
+            cgl_window_poll_events(&window);
             render_triangle(&window);
             cgl_window_flush(&window);
         }
