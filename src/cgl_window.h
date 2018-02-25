@@ -45,6 +45,7 @@ struct cgl_window
     CGSSurfaceID surface;
     CGWindowLevel level;
     CGFloat x, y, width, height;
+    GLint v_sync;
     enum cgl_window_gl_profile gl_profile;
     cgl_window_event_callback *mouse_callback;
     cgl_window_event_callback *key_callback;
@@ -56,7 +57,7 @@ void cgl_window_set_key_callback(struct cgl_window *window, cgl_window_event_cal
 void cgl_window_poll_events(struct cgl_window *window);
 void cgl_window_bring_to_front(struct cgl_window *window);
 
-int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, enum cgl_window_gl_profile gl_profile);
+int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, enum cgl_window_gl_profile gl_profile, GLint v_sync);
 void cgl_window_destroy(struct cgl_window *window);
 
 int cgl_window_move(struct cgl_window *window, float x, float y);

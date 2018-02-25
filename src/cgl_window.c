@@ -73,7 +73,6 @@ static int
 cgl_window_context_init(struct cgl_window *window)
 {
     CGLPixelFormatObj pixel_format;
-    GLint v_sync_enabled;
     GLint drawable;
     GLint num;
 
@@ -95,8 +94,7 @@ cgl_window_context_init(struct cgl_window *window)
         goto err_pix_fmt;
     }
 
-    v_sync_enabled = 1;
-    CGLSetParameter(window->context, kCGLCPSwapInterval, &v_sync_enabled);
+    CGLSetParameter(window->context, kCGLCPSwapInterval, &window->v_sync);
 
     if (!cgl_window_surface_init(window)) {
         goto err_context;
@@ -122,7 +120,7 @@ err:
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, enum cgl_window_gl_profile gl_profile)
+int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, enum cgl_window_gl_profile gl_profile, GLint v_sync)
 {
     int result = 0;
     CGContextRef context;
@@ -140,6 +138,7 @@ int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat wid
     window->height = height;
     window->level = level;
     window->gl_profile = gl_profile;
+    window->v_sync = v_sync;
     GetCurrentProcess(&window->psn);
 
     rect = CGRectMake(0, 0, window->width, window->height);
