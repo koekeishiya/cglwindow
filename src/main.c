@@ -12,7 +12,17 @@
 global_variable bool should_quit;
 global_variable bool left_mouse_down;
 
-void key_callback(struct cgl_window *window, EventRef event)
+void application_callback(struct cgl_window *window, EventRef event, void *user_data)
+{
+    uint32_t event_kind = GetEventKind(event);
+    if (event_kind == kEventAppActivated) {
+        cgl_window_set_alpha(window, 1.0f);
+    } else if (event_kind == kEventAppDeactivated) {
+        cgl_window_set_alpha(window, 0.25);
+    }
+}
+
+void key_callback(struct cgl_window *window, EventRef event, void *user_data)
 {
     uint32_t event_kind = GetEventKind(event);
     if ((event_kind == kEventRawKeyDown) ||
@@ -40,7 +50,7 @@ void key_callback(struct cgl_window *window, EventRef event)
     }
 }
 
-void mouse_callback(struct cgl_window *window, EventRef event)
+void mouse_callback(struct cgl_window *window, EventRef event, void *user_data)
 {
     uint32_t event_kind = GetEventKind(event);
     if ((event_kind == kEventMouseDown) || (event_kind == kEventMouseUp) ||
@@ -97,12 +107,13 @@ int main(int argc, char **argv)
 {
     struct cgl_window window = {};
     if (cgl_window_init(&window, 200, 200, 500, 500, kCGNormalWindowLevelKey, CGL_WINDOW_GL_LEGACY, 1)) {
+        cgl_window_set_application_callback(&window, &application_callback);
         cgl_window_set_mouse_callback(&window, &mouse_callback);
         cgl_window_set_key_callback(&window, &key_callback);
         cgl_window_make_current(&window);
 
         while (!should_quit) {
-            cgl_window_poll_events(&window);
+            cgl_window_poll_events(&window, NULL);
             render_triangle(&window);
             cgl_window_flush(&window);
         }

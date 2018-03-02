@@ -25,6 +25,7 @@ CGError CGSSetWindowShape(CGSConnectionID cid, CGWindowID wid, float x_offset, f
 OSStatus CGSOrderWindow(CGSConnectionID cid, CGSWindowID wid, enum CGSWindowOrderingMode place, CGSWindowID relativeToWindow /* nullable */);
 CGError CGSMoveWindow(CGSConnectionID cid, CGSWindowID wid, CGPoint *window_pos);
 CGError CGSSetWindowOpacity(CGSConnectionID cid, CGSWindowID wid, bool isOpaque);
+CGError CGSSetWindowAlpha(CGSConnectionID cid, CGSWindowID wid, float alpha);
 CGError CGSSetWindowLevel(CGSConnectionID cid, CGSWindowID wid, CGWindowLevel level);
 CGError CGSAddSurface(CGSConnectionID cid, CGSWindowID wid, CGSSurfaceID *sid);
 CGError CGSRemoveSurface(CGSConnectionID cid, CGSWindowID wid, CGSSurfaceID sid);
@@ -218,6 +219,11 @@ err:
     return result;
 }
 
+void cgl_window_set_alpha(struct cgl_window *window, float alpha)
+{
+    CGSSetWindowAlpha(window->connection, window->id, alpha);
+}
+
 void cgl_window_destroy(struct cgl_window *window)
 {
     CGLDestroyContext(window->context);
@@ -241,6 +247,11 @@ void cgl_window_set_mouse_callback(struct cgl_window *window, cgl_window_event_c
 void cgl_window_set_key_callback(struct cgl_window *window, cgl_window_event_callback *key_callback)
 {
     window->key_callback = key_callback;
+}
+
+void cgl_window_set_application_callback(struct cgl_window *window, cgl_window_event_callback *application_callback)
+{
+    window->application_callback = application_callback;
 }
 
 void cgl_window_make_current(struct cgl_window *window)
@@ -279,7 +290,7 @@ debug_print_event_class(OSType event_class)
 }
 #endif
 
-void cgl_window_poll_events(struct cgl_window *window)
+void cgl_window_poll_events(struct cgl_window *window, void *user_data)
 {
     EventTargetRef event_target = GetEventDispatcherTarget();
     EventRef event;
@@ -289,11 +300,15 @@ void cgl_window_poll_events(struct cgl_window *window)
 
         if (event_class == kEventClassMouse) {
             if (window->mouse_callback) {
-                window->mouse_callback(window, event);
+                window->mouse_callback(window, event, user_data);
             }
-        } else if(event_class == kEventClassKeyboard) {
+        } else if (event_class == kEventClassKeyboard) {
             if (window->key_callback) {
-                window->key_callback(window, event);
+                window->key_callback(window, event, user_data);
+            }
+        } else if (event_class == kEventClassApplication) {
+            if (window->application_callback) {
+                window->application_callback(window, event, user_data);
             }
         }
 
