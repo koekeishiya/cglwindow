@@ -46,6 +46,10 @@ void key_callback(struct cgl_window *window, EventRef event, void *user_data)
             cgl_window_resize(window, window->x, window->y, window->width - 5, window->height - 5);
         } else if (event_kind == kEventRawKeyDown && keycode == kVK_ANSI_R) {
             cgl_window_resize(window, window->x, window->y, window->width + 5, window->height + 5);
+        } else if (event_kind == kEventRawKeyDown && keycode == kVK_ANSI_T) {
+            cgl_window_set_sticky(window, 1);
+        } else if (event_kind == kEventRawKeyDown && keycode == kVK_ANSI_Y) {
+            cgl_window_set_sticky(window, 0);
         }
     }
 }

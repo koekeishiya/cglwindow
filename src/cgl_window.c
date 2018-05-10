@@ -33,6 +33,8 @@ CGError CGSSetSurfaceBounds(CGSConnectionID cid, CGSWindowID wid, CGSSurfaceID s
 CGError CGSOrderSurface(CGSConnectionID cid, CGSWindowID wid, CGSSurfaceID sid, int a, int b);
 CGLError CGLSetSurface(CGLContextObj gl, CGSConnectionID cid, CGSWindowID wid, CGSSurfaceID sid);
 CGContextRef CGWindowContextCreate(CGSConnectionID cid, CGSWindowID wid, CFDictionaryRef options);
+CGError CGSSetWindowTags(CGSConnectionID cid, CGSWindowID wid, const int tags[2], size_t tag_size);
+CGError CGSClearWindowTags(CGSConnectionID cid, CGSWindowID wid, const int tags[2], size_t tag_size);
 #ifdef __cplusplus
 }
 #endif
@@ -223,6 +225,18 @@ void cgl_window_set_alpha(struct cgl_window *window, float alpha)
 {
     CGSSetWindowAlpha(window->connection, window->id, alpha);
 }
+
+void cgl_window_set_sticky(struct cgl_window *window, bool sticky)
+{
+    int tags[2] = {0};
+    tags[0] |= (1 << 11);
+    if (sticky) {
+        CGSSetWindowTags(window->connection, window->id, tags, 32);
+    } else {
+        CGSClearWindowTags(window->connection, window->id, tags, 32);
+    }
+}
+
 
 void cgl_window_destroy(struct cgl_window *window)
 {

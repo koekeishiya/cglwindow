@@ -65,6 +65,7 @@ void cgl_window_destroy(struct cgl_window *window);
 int cgl_window_move(struct cgl_window *window, float x, float y);
 int cgl_window_resize(struct cgl_window *window, float x, float y, float width, float height);
 void cgl_window_set_alpha(struct cgl_window *window, float alpha);
+void cgl_window_set_sticky(struct cgl_window *window, bool sticky);
 
 void cgl_window_make_current(struct cgl_window *window);
 CGLError cgl_window_flush(struct cgl_window *window);
