@@ -86,6 +86,7 @@ void cgl_window_set_key_callback(struct cgl_window *window, cgl_window_event_cal
 void cgl_window_poll_events(struct cgl_window *window, void *user_data);
 void cgl_window_bring_to_front(struct cgl_window *window);
 void cgl_window_show_cursor(struct cgl_window *window, bool visible);
+bool cgl_window_toggle_fullscreen(struct cgl_window *window);
 
 int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, enum cgl_window_level level, enum cgl_window_gl_profile gl_profile, GLint v_sync);
 void cgl_window_destroy(struct cgl_window *window);

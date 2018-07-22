@@ -41,6 +41,7 @@ CGError CGSAddDragRegion(CGSConnectionID cid, CGSWindowID wid, CGSRegionRef regi
 CGError CGSClearDragRegion(CGSConnectionID cid, CGSWindowID wid);
 CGError CGSAddTrackingRect(CGSConnectionID cid, CGSWindowID wid, CGRect rect);
 CGError CGSRemoveAllTrackingAreas(CGSConnectionID cid, CGSWindowID wid);
+CFStringRef CGSCopyManagedDisplayForWindow(const CGSConnectionID cid, CGSWindowID wid);
 #ifdef __cplusplus
 }
 #endif
@@ -317,6 +318,31 @@ void cgl_window_show_cursor(struct cgl_window *window, bool visible)
     }
 }
 #pragma clang diagnostic pop
+
+bool cgl_window_toggle_fullscreen(struct cgl_window *window)
+{
+    static CGRect window_rect = {};
+    if (window_rect.size.width == 0) {
+        window_rect.origin.x = window->x;
+        window_rect.origin.y = window->y;
+        window_rect.size.width = window->width;
+        window_rect.size.height = window->height;
+        CFStringRef display_ref = CGSCopyManagedDisplayForWindow(window->connection, window->id);
+        CFUUIDRef display_uuid = CFUUIDCreateFromString(NULL, display_ref);
+        CGDirectDisplayID display_id = CGDisplayGetDisplayIDFromUUID(display_uuid);
+        CFRelease(display_uuid);
+        CFRelease(display_ref);
+        CGRect display_rect = CGDisplayBounds(display_id);
+        cgl_window_move(window, display_rect.origin.x, display_rect.origin.y);
+        cgl_window_resize(window, display_rect.size.width, display_rect.size.height);
+        return true;
+    } else {
+        cgl_window_move(window, window_rect.origin.x, window_rect.origin.y);
+        cgl_window_resize(window, window_rect.size.width, window_rect.size.height);
+        window_rect.size.width = 0;
+        return false;
+    }
+}
 
 void cgl_window_make_current(struct cgl_window *window)
 {
