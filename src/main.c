@@ -92,6 +92,10 @@ void mouse_callback(struct cgl_window *window, EventRef event, void *user_data)
         } else if (event_kind == kEventMouseDown && button == 2) {
             should_quit = true;
         }
+    } else if (event_kind == kEventMouseEntered) {
+        printf("mouse entered window\n");
+    } else if (event_kind == kEventMouseExited) {
+        printf("mouse exited window\n");
     }
 }
 

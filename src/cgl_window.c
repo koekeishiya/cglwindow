@@ -39,6 +39,8 @@ CGError CGSAddActivationRegion(CGSConnectionID cid, CGSWindowID wid, CGSRegionRe
 CGError CGSClearActivationRegion(CGSConnectionID cid, CGSWindowID wid);
 CGError CGSAddDragRegion(CGSConnectionID cid, CGSWindowID wid, CGSRegionRef region);
 CGError CGSClearDragRegion(CGSConnectionID cid, CGSWindowID wid);
+CGError CGSAddTrackingRect(CGSConnectionID cid, CGSWindowID wid, CGRect rect);
+CGError CGSRemoveAllTrackingAreas(CGSConnectionID cid, CGSWindowID wid);
 #ifdef __cplusplus
 }
 #endif
@@ -160,6 +162,7 @@ int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat wid
     }
 
     CGSAddActivationRegion(window->connection, window->id, region);
+    CGSAddTrackingRect(window->connection, window->id, rect);
 
     CGSSetWindowOpacity(window->connection, window->id, 0);
     CGSSetWindowLevel(window->connection, window->id, CGWindowLevelForKey((CGWindowLevelKey)window->level));
@@ -213,6 +216,8 @@ int cgl_window_resize(struct cgl_window *window, float width, float height)
 
     CGSClearActivationRegion(window->connection, window->id);
     CGSAddActivationRegion(window->connection, window->id, shape);
+    CGSRemoveAllTrackingAreas(window->connection, window->id);
+    CGSAddTrackingRect(window->connection, window->id, rect);
 
     if (window->surface) {
         CGSRemoveSurface(window->connection, window->id, window->surface);
