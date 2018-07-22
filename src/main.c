@@ -92,10 +92,8 @@ void mouse_callback(struct cgl_window *window, EventRef event, void *user_data)
             should_quit = true;
         }
     } else if (event_kind == kEventMouseEntered) {
-        printf("mouse entered window\n");
         cgl_window_show_cursor(window, 0);
     } else if (event_kind == kEventMouseExited) {
-        printf("mouse exited window\n");
         cgl_window_show_cursor(window, 1);
     }
 }
