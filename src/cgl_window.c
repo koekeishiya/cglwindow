@@ -129,7 +129,7 @@ err:
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, int level, enum cgl_window_gl_profile gl_profile, GLint v_sync)
+int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, enum cgl_window_level level, enum cgl_window_gl_profile gl_profile, GLint v_sync)
 {
     int result = 0;
     CGContextRef context;
@@ -259,6 +259,11 @@ void cgl_window_set_sticky(struct cgl_window *window, bool sticky)
 void cgl_window_set_alpha(struct cgl_window *window, float alpha)
 {
     CGSSetWindowAlpha(window->connection, window->id, alpha);
+}
+
+void cgl_window_set_level(struct cgl_window *window, uint32_t level)
+{
+    CGSSetWindowLevel(window->connection, window->id, CGWindowLevelForKey((CGWindowLevelKey)level));
 }
 
 void cgl_window_destroy(struct cgl_window *window)
