@@ -1,6 +1,8 @@
 #ifndef CGL_WINDOW_H
 #define CGL_WINDOW_H
 
+#define GL_SILENCE_DEPRECATION
+
 #include <Carbon/Carbon.h>
 #include <OpenGL/CGLTypes.h>
 #include <OpenGL/CGLCurrent.h>

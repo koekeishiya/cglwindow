@@ -16,6 +16,7 @@ void application_callback(struct cgl_window *window, EventRef event, void *user_
 {
     uint32_t event_kind = GetEventKind(event);
     if (event_kind == kEventAppActivated) {
+        cgl_window_bring_to_front(window);
         cgl_window_set_alpha(window, 1.0f);
     } else if (event_kind == kEventAppDeactivated) {
         cgl_window_set_alpha(window, 0.25);
@@ -57,8 +58,10 @@ void key_callback(struct cgl_window *window, EventRef event, void *user_data)
 void mouse_callback(struct cgl_window *window, EventRef event, void *user_data)
 {
     uint32_t event_kind = GetEventKind(event);
-    if ((event_kind == kEventMouseDown) || (event_kind == kEventMouseUp) ||
-        (event_kind == kEventMouseDragged) || (event_kind == kEventMouseMoved)) {
+    if ((event_kind == kEventMouseDown) ||
+        (event_kind == kEventMouseUp) ||
+        (event_kind == kEventMouseDragged) ||
+        (event_kind == kEventMouseMoved)) {
         EventMouseButton button;
         uint32_t modifiers;
         HIPoint location;
@@ -69,15 +72,17 @@ void mouse_callback(struct cgl_window *window, EventRef event, void *user_data)
         GetEventParameter(event, kEventParamMouseLocation, typeHIPoint, NULL, sizeof(HIPoint), NULL, &location);
         GetEventParameter(event, kEventParamMouseDelta, typeHIPoint, NULL, sizeof(HIPoint), NULL, &delta);
 
-        printf("modifiers: %08x, button: %d, location.x: %.2f, location.y: %.2f, delta.x: %.2f, delta.y: %.2f\n", modifiers, button, location.x, location.y, delta.x, delta.y);
+        printf("modifiers: %08x, button: %d,"
+               "location.x: %.2f, location.y: %.2f,"
+               "delta.x: %.2f, delta.y: %.2f\n",
+               modifiers, button,
+               location.x, location.y,
+               delta.x, delta.y);
 
         if (event_kind == kEventMouseDown && button == 1) {
             left_mouse_down = true;
-            cgl_window_bring_to_front(window);
         } else if (event_kind == kEventMouseUp && button == 1) {
             left_mouse_down = false;
-        } else if (event_kind == kEventMouseDragged && button == 1) {
-           cgl_window_move(window, window->x + delta.x, window->y + delta.y);
         } else if (event_kind == kEventMouseDown && button == 2) {
             should_quit = true;
         }
@@ -110,7 +115,7 @@ void render_triangle(struct cgl_window *window)
 int main(int argc, char **argv)
 {
     struct cgl_window window = {};
-    if (cgl_window_init(&window, 200, 200, 500, 500, kCGNormalWindowLevelKey, CGL_WINDOW_GL_LEGACY, 1)) {
+    if (cgl_window_init(&window, 200, 200, 500, 500, kCGFloatingWindowLevelKey, CGL_WINDOW_GL_LEGACY, 1)) {
         cgl_window_set_application_callback(&window, &application_callback);
         cgl_window_set_mouse_callback(&window, &mouse_callback);
         cgl_window_set_key_callback(&window, &key_callback);
