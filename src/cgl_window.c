@@ -2,16 +2,16 @@
 
 enum CGSWindowBackingType
 {
-	kCGSBackingNonRetained = 0,
-	kCGSBackingRetained = 1,
-	kCGSBackingBuffered = 2
+    kCGSBackingNonRetained = 0,
+    kCGSBackingRetained = 1,
+    kCGSBackingBuffered = 2
 };
 
 enum CGSWindowOrderingMode
 {
-   kCGSOrderAbove = 1,
-   kCGSOrderBelow = -1,
-   kCGSOrderOut = 0
+    kCGSOrderAbove = 1,
+    kCGSOrderBelow = -1,
+    kCGSOrderOut = 0
 };
 
 #ifdef __cplusplus
