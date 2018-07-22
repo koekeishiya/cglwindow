@@ -42,6 +42,7 @@ CGError CGSClearDragRegion(CGSConnectionID cid, CGSWindowID wid);
 CGError CGSAddTrackingRect(CGSConnectionID cid, CGSWindowID wid, CGRect rect);
 CGError CGSRemoveAllTrackingAreas(CGSConnectionID cid, CGSWindowID wid);
 CFStringRef CGSCopyManagedDisplayForWindow(const CGSConnectionID cid, CGSWindowID wid);
+CGError CGSGetScreenRectForWindow(CGSConnectionID cid, CGSWindowID wid, CGRect *outRect);
 #ifdef __cplusplus
 }
 #endif
@@ -380,6 +381,13 @@ debug_print_event_class(OSType event_class)
 }
 #endif
 
+/*
+ * NOTE(koekeishiya): this event-class is not amongs the constants defined above for some reason,
+ * however it appears to report window-related events.
+ */
+#define kUnknownEventClassWindow 1667724064
+#define kUnknownEventWindowMoved 13
+
 void cgl_window_poll_events(struct cgl_window *window, void *user_data)
 {
     EventTargetRef event_target = GetEventDispatcherTarget();
@@ -400,6 +408,16 @@ void cgl_window_poll_events(struct cgl_window *window, void *user_data)
             if (window->application_callback) {
                 window->application_callback(window, event, user_data);
             }
+        } else if (event_class == kUnknownEventClassWindow) {
+            uint32_t event_kind = GetEventKind(event);
+            if (event_kind == kUnknownEventWindowMoved) {
+                CGRect rect;
+                CGSGetScreenRectForWindow(window->connection, window->id, &rect);
+                window->x = rect.origin.x;
+                window->y = rect.origin.y;
+            }
+        } else if (event_class == kEventClassAppleEvent) {
+            AEProcessEvent(event);
         }
 
         SendEventToEventTarget(event, event_target);
