@@ -16,7 +16,6 @@ void application_callback(struct cgl_window *window, EventRef event, void *user_
 {
     uint32_t event_kind = GetEventKind(event);
     if (event_kind == kEventAppActivated) {
-        cgl_window_bring_to_front(window);
         cgl_window_set_alpha(window, 1.0f);
     } else if (event_kind == kEventAppDeactivated) {
         cgl_window_set_alpha(window, 0.25);
