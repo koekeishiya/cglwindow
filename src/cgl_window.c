@@ -291,6 +291,28 @@ void cgl_window_set_application_callback(struct cgl_window *window, cgl_window_e
     window->application_callback = application_callback;
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+void cgl_window_show_cursor(struct cgl_window *window, bool visible)
+{
+    ProcessSerialNumber front_psn;
+    GetFrontProcess(&front_psn);
+
+    if ((front_psn.highLongOfPSN == window->psn.highLongOfPSN) &&
+        (front_psn.lowLongOfPSN == window->psn.lowLongOfPSN)) {
+        if (visible) {
+            while (!CGCursorIsVisible()) {
+                CGDisplayShowCursor(0);
+            }
+        } else {
+            while (CGCursorIsVisible()) {
+                CGDisplayHideCursor(0);
+            }
+        }
+    }
+}
+#pragma clang diagnostic pop
+
 void cgl_window_make_current(struct cgl_window *window)
 {
     CGLSetCurrentContext(window->context);
