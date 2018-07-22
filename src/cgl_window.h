@@ -7,8 +7,8 @@
 #include <OpenGL/CGLTypes.h>
 #include <OpenGL/CGLCurrent.h>
 #include <OpenGL/OpenGL.h>
-#include <OpenGL/gl.h>
 #include <OpenGL/gl3.h>
+#include <OpenGL/gl.h>
 #include <stdint.h>
 
 typedef int CGSConnectionID;
@@ -65,9 +65,11 @@ int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat wid
 void cgl_window_destroy(struct cgl_window *window);
 
 int cgl_window_move(struct cgl_window *window, float x, float y);
-int cgl_window_resize(struct cgl_window *window, float x, float y, float width, float height);
+int cgl_window_resize(struct cgl_window *window, float width, float height);
 void cgl_window_set_alpha(struct cgl_window *window, float alpha);
 void cgl_window_set_sticky(struct cgl_window *window, bool sticky);
+void cgl_window_add_drag_region(struct cgl_window *window, float x, float y, float width, float height);
+void cgl_window_clear_drag_region(struct cgl_window *window);
 
 void cgl_window_make_current(struct cgl_window *window);
 CGLError cgl_window_flush(struct cgl_window *window);

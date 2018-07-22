@@ -44,9 +44,15 @@ void key_callback(struct cgl_window *window, EventRef event, void *user_data)
         }
 
         if (event_kind == kEventRawKeyDown && keycode == kVK_ANSI_R && (modifiers & CGL_EVENT_MOD_SHIFT)) {
-            cgl_window_resize(window, window->x, window->y, window->width - 5, window->height - 5);
+            cgl_window_clear_drag_region(window);
+            cgl_window_resize(window, window->width - 5, window->height - 5);
+            glViewport(0, 0, window->width, window->height);
+            cgl_window_add_drag_region(window, 0, 0, window->width, window->height);
         } else if (event_kind == kEventRawKeyDown && keycode == kVK_ANSI_R) {
-            cgl_window_resize(window, window->x, window->y, window->width + 5, window->height + 5);
+            cgl_window_clear_drag_region(window);
+            cgl_window_resize(window, window->width + 5, window->height + 5);
+            glViewport(0, 0, window->width, window->height);
+            cgl_window_add_drag_region(window, 0, 0, window->width, window->height);
         } else if (event_kind == kEventRawKeyDown && keycode == kVK_ANSI_T) {
             cgl_window_set_sticky(window, 1);
         } else if (event_kind == kEventRawKeyDown && keycode == kVK_ANSI_Y) {
@@ -116,6 +122,7 @@ int main(int argc, char **argv)
 {
     struct cgl_window window = {};
     if (cgl_window_init(&window, 200, 200, 500, 500, kCGFloatingWindowLevelKey, CGL_WINDOW_GL_LEGACY, 1)) {
+        cgl_window_add_drag_region(&window, 0, 0, 500, 500);
         cgl_window_set_application_callback(&window, &application_callback);
         cgl_window_set_mouse_callback(&window, &mouse_callback);
         cgl_window_set_key_callback(&window, &key_callback);

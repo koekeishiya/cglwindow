@@ -36,7 +36,9 @@ CGContextRef CGWindowContextCreate(CGSConnectionID cid, CGSWindowID wid, CFDicti
 CGError CGSSetWindowTags(CGSConnectionID cid, CGSWindowID wid, const int tags[2], size_t tag_size);
 CGError CGSClearWindowTags(CGSConnectionID cid, CGSWindowID wid, const int tags[2], size_t tag_size);
 CGError CGSAddActivationRegion(CGSConnectionID cid, CGSWindowID wid, CGSRegionRef region);
+CGError CGSClearActivationRegion(CGSConnectionID cid, CGSWindowID wid);
 CGError CGSAddDragRegion(CGSConnectionID cid, CGSWindowID wid, CGSRegionRef region);
+CGError CGSClearDragRegion(CGSConnectionID cid, CGSWindowID wid);
 #ifdef __cplusplus
 }
 #endif
@@ -94,7 +96,7 @@ cgl_window_context_init(struct cgl_window *window)
         goto err;
     }
 
-    CGLCreateContext(pixel_format, NULL, &window->context);
+    CGLCreateContext(pixel_format, 0, &window->context);
     if(!window->context) {
         goto err_pix_fmt;
     }
@@ -158,7 +160,6 @@ int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat wid
     }
 
     CGSAddActivationRegion(window->connection, window->id, region);
-    CGSAddDragRegion(window->connection, window->id, region);
 
     CGSSetWindowOpacity(window->connection, window->id, 0);
     CGSSetWindowLevel(window->connection, window->id, CGWindowLevelForKey((CGWindowLevelKey)window->level));
@@ -193,7 +194,7 @@ int cgl_window_move(struct cgl_window *window, float x, float y)
    return 1;
 }
 
-int cgl_window_resize(struct cgl_window *window, float x, float y, float width, float height)
+int cgl_window_resize(struct cgl_window *window, float width, float height)
 {
     int result = 0;
     CGSRegionRef shape;
@@ -203,20 +204,20 @@ int cgl_window_resize(struct cgl_window *window, float x, float y, float width, 
         goto err;
     }
 
-    if (CGSSetWindowShape(window->connection, window->id, x, y, shape) != kCGErrorSuccess) {
+    if (CGSSetWindowShape(window->connection, window->id, window->x, window->y, shape) != kCGErrorSuccess) {
         goto err_region;
     }
 
-    window->x = x;
-    window->y = y;
     window->width = width;
     window->height = height;
+
+    CGSClearActivationRegion(window->connection, window->id);
+    CGSAddActivationRegion(window->connection, window->id, shape);
 
     if (window->surface) {
         CGSRemoveSurface(window->connection, window->id, window->surface);
     }
     cgl_window_surface_init(window);
-    glViewport(0, 0, width, height);
     result = 1;
 
 err_region:
@@ -226,9 +227,17 @@ err:
     return result;
 }
 
-void cgl_window_set_alpha(struct cgl_window *window, float alpha)
+void cgl_window_add_drag_region(struct cgl_window *window, float x, float y, float width, float height)
 {
-    CGSSetWindowAlpha(window->connection, window->id, alpha);
+    CGSRegionRef region;
+    CGRect rect = CGRectMake(x, y, width, height);
+    CGSNewRegionWithRect(&rect, &region);
+    CGSAddDragRegion(window->connection, window->id, region);
+}
+
+void cgl_window_clear_drag_region(struct cgl_window *window)
+{
+    CGSClearDragRegion(window->connection, window->id);
 }
 
 void cgl_window_set_sticky(struct cgl_window *window, bool sticky)
@@ -242,6 +251,10 @@ void cgl_window_set_sticky(struct cgl_window *window, bool sticky)
     }
 }
 
+void cgl_window_set_alpha(struct cgl_window *window, float alpha)
+{
+    CGSSetWindowAlpha(window->connection, window->id, alpha);
+}
 
 void cgl_window_destroy(struct cgl_window *window)
 {
@@ -314,7 +327,7 @@ void cgl_window_poll_events(struct cgl_window *window, void *user_data)
     EventTargetRef event_target = GetEventDispatcherTarget();
     EventRef event;
 
-    while (ReceiveNextEvent(0, NULL, kEventDurationNoWait, true, &event) == noErr) {
+    while (ReceiveNextEvent(0, 0, kEventDurationNoWait, true, &event) == noErr) {
         OSType event_class = GetEventClass(event);
 
         if (event_class == kEventClassMouse) {
