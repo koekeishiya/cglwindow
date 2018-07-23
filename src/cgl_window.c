@@ -49,7 +49,7 @@ CGError CGSGetScreenRectForWindow(CGSConnectionID cid, CGSWindowID wid, CGRect *
 
 static int cgl_gl_profiles[2] = { kCGLOGLPVersion_Legacy, kCGLOGLPVersion_3_2_Core };
 
-static int
+static bool
 cgl_window_surface_init(struct cgl_window *window)
 {
     GLint surface_opacity = 0;
@@ -71,16 +71,16 @@ cgl_window_surface_init(struct cgl_window *window)
         goto err_surface;
     }
 
-    return 1;
+    return true;
 
 err_surface:
     CGSRemoveSurface(window->connection, window->id, window->surface);
 
 err:
-    return 0;
+    return false;
 }
 
-static int
+static bool
 cgl_window_context_init(struct cgl_window *window)
 {
     CGLPixelFormatObj pixel_format;
@@ -117,7 +117,7 @@ cgl_window_context_init(struct cgl_window *window)
     }
 
     CGLDestroyPixelFormat(pixel_format);
-    return 1;
+    return true;
 
 err_context:
     CGLDestroyContext(window->context);
@@ -126,14 +126,14 @@ err_pix_fmt:
     CGLDestroyPixelFormat(pixel_format);
 
 err:
-    return 0;
+    return false;
 }
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, enum cgl_window_level level, enum cgl_window_gl_profile gl_profile, GLint v_sync)
+bool cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, enum cgl_window_level level, enum cgl_window_gl_profile gl_profile, bool v_sync)
 {
-    int result = 0;
+    bool result = false;
     CGContextRef context;
     CGSRegionRef region;
     CGRect rect;
@@ -149,7 +149,7 @@ int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat wid
     window->height = height;
     window->level = level;
     window->gl_profile = gl_profile;
-    window->v_sync = v_sync;
+    window->v_sync = v_sync ? 1 : 0;
     GetCurrentProcess(&window->psn);
 
     rect = CGRectMake(0, 0, window->width, window->height);
@@ -186,22 +186,22 @@ err:
 }
 #pragma clang diagnostic pop
 
-int cgl_window_move(struct cgl_window *window, float x, float y)
+bool cgl_window_move(struct cgl_window *window, float x, float y)
 {
    CGPoint window_pos = { .x = x, .y = y };
 
    if (CGSMoveWindow(window->connection, window->id, &window_pos) != kCGErrorSuccess) {
-       return 0;
+       return false;
    }
 
    window->x = x;
    window->y = y;
-   return 1;
+   return true;
 }
 
-int cgl_window_resize(struct cgl_window *window, float width, float height)
+bool cgl_window_resize(struct cgl_window *window, float width, float height)
 {
-    int result = 0;
+    bool result = false;
     CGSRegionRef shape;
     CGRect rect = CGRectMake(0, 0, width, height);
 
@@ -225,7 +225,7 @@ int cgl_window_resize(struct cgl_window *window, float width, float height)
         CGSRemoveSurface(window->connection, window->id, window->surface);
     }
     cgl_window_surface_init(window);
-    result = 1;
+    result = true;
 
 err_region:
     CFRelease(shape);

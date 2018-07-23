@@ -11,6 +11,10 @@
 #include <OpenGL/gl.h>
 #include <stdint.h>
 
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
+
 typedef int CGSConnectionID;
 typedef uint32_t CGSWindowID;
 typedef int CGWindowLevel;
@@ -88,11 +92,11 @@ void cgl_window_bring_to_front(struct cgl_window *window);
 void cgl_window_show_cursor(struct cgl_window *window, bool visible);
 bool cgl_window_toggle_fullscreen(struct cgl_window *window);
 
-int cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, enum cgl_window_level level, enum cgl_window_gl_profile gl_profile, GLint v_sync);
+bool cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, enum cgl_window_level level, enum cgl_window_gl_profile gl_profile, bool v_sync);
 void cgl_window_destroy(struct cgl_window *window);
 
-int cgl_window_move(struct cgl_window *window, float x, float y);
-int cgl_window_resize(struct cgl_window *window, float width, float height);
+bool cgl_window_move(struct cgl_window *window, float x, float y);
+bool cgl_window_resize(struct cgl_window *window, float width, float height);
 void cgl_window_set_alpha(struct cgl_window *window, float alpha);
 void cgl_window_set_level(struct cgl_window *window, enum cgl_window_level level);
 void cgl_window_set_sticky(struct cgl_window *window, bool sticky);
