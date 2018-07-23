@@ -263,7 +263,7 @@ void cgl_window_set_alpha(struct cgl_window *window, float alpha)
     CGSSetWindowAlpha(window->connection, window->id, alpha);
 }
 
-void cgl_window_set_level(struct cgl_window *window, uint32_t level)
+void cgl_window_set_level(struct cgl_window *window, enum cgl_window_level level)
 {
     CGSSetWindowLevel(window->connection, window->id, CGWindowLevelForKey((CGWindowLevelKey)level));
 }
