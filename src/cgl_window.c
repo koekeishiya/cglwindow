@@ -92,7 +92,7 @@ cgl_window_context_init(struct cgl_window *window)
         kCGLPFAAccelerated,
         kCGLPFAOpenGLProfile,
         (CGLPixelFormatAttribute) cgl_gl_profiles[window->gl_profile],
-        0
+        (CGLPixelFormatAttribute) 0
     };
 
     CGLChoosePixelFormat(attributes, &pixel_format, &num);
