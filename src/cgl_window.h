@@ -83,27 +83,26 @@ struct cgl_window
     cgl_window_event_callback *application_callback;
 };
 
+bool cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, enum cgl_window_level level, enum cgl_window_gl_profile gl_profile, bool v_sync);
+void cgl_window_destroy(struct cgl_window *window);
+
 void cgl_window_set_application_callback(struct cgl_window *window, cgl_window_event_callback *mouse_callback);
 void cgl_window_set_mouse_callback(struct cgl_window *window, cgl_window_event_callback *mouse_callback);
 void cgl_window_set_key_callback(struct cgl_window *window, cgl_window_event_callback *key_callback);
 
-void cgl_window_poll_events(struct cgl_window *window, void *user_data);
 void cgl_window_bring_to_front(struct cgl_window *window);
-void cgl_window_show_cursor(struct cgl_window *window, bool visible);
-bool cgl_window_toggle_fullscreen(struct cgl_window *window);
-
-bool cgl_window_init(struct cgl_window *window, CGFloat x, CGFloat y, CGFloat width, CGFloat height, enum cgl_window_level level, enum cgl_window_gl_profile gl_profile, bool v_sync);
-void cgl_window_destroy(struct cgl_window *window);
-
+void cgl_window_add_drag_region(struct cgl_window *window, float x, float y, float width, float height);
+void cgl_window_clear_drag_region(struct cgl_window *window);
 bool cgl_window_move(struct cgl_window *window, float x, float y);
 bool cgl_window_resize(struct cgl_window *window, float width, float height);
 void cgl_window_set_alpha(struct cgl_window *window, float alpha);
 void cgl_window_set_level(struct cgl_window *window, enum cgl_window_level level);
 void cgl_window_set_sticky(struct cgl_window *window, bool sticky);
-void cgl_window_add_drag_region(struct cgl_window *window, float x, float y, float width, float height);
-void cgl_window_clear_drag_region(struct cgl_window *window);
+void cgl_window_show_cursor(struct cgl_window *window, bool visible);
+bool cgl_window_toggle_fullscreen(struct cgl_window *window);
 
 void cgl_window_make_current(struct cgl_window *window);
+void cgl_window_poll_events(struct cgl_window *window, void *user_data);
 CGLError cgl_window_flush(struct cgl_window *window);
 
 #endif
